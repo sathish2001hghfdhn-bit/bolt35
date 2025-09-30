@@ -90,8 +90,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Load all registered users from localStorage
       const registeredUsers = JSON.parse(localStorage.getItem('mindcare_registered_users') || '[]');
       
+      // Load demo users with any updates
+      const demoUsers = JSON.parse(localStorage.getItem('mindcare_demo_users') || '[]');
+      
       // Predefined demo users
-      const demoUsers = [
+      const defaultDemoUsers = [
         {
           id: '1',
           email: 'patient@example.com',
@@ -134,8 +137,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       ];
       
+      // Merge default demo users with any updated demo user data
+      const mergedDemoUsers = defaultDemoUsers.map(defaultUser => {
+        const updatedUser = demoUsers.find((u: any) => u.id === defaultUser.id);
+        return updatedUser ? { ...defaultUser, ...updatedUser } : defaultUser;
+      });
+      
       // Combine demo users with registered users
-      const allUsers = [...demoUsers, ...registeredUsers];
+      const allUsers = [...mergedDemoUsers, ...registeredUsers];
 
       // Find user by email first, then check role if specified
       const foundUser = allUsers.find(u => u.email === email);
@@ -234,6 +243,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const updateUser = (userData: User) => {
     setUser(userData);
     localStorage.setItem('mindcare_user', JSON.stringify(userData));
+    
+    // If this is a demo user, also update the demo users storage
+    const isDemoUser = userData.email === 'admin@example.com' || userData.email === 'patient@example.com' || userData.email === 'therapist@example.com';
+    if (isDemoUser) {
+      const demoUsers = JSON.parse(localStorage.getItem('mindcare_demo_users') || '[]');
+      const existingIndex = demoUsers.findIndex((u: any) => u.id === userData.id);
+      
+      if (existingIndex !== -1) {
+        demoUsers[existingIndex] = userData;
+      } else {
+        demoUsers.push(userData);
+      }
+      localStorage.setItem('mindcare_demo_users', JSON.stringify(demoUsers));
+    }
     
     // Trigger storage event for other tabs
     window.dispatchEvent(new StorageEvent('storage', {

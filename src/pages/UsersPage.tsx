@@ -42,15 +42,32 @@ function UsersPage() {
     
     // Set up interval to refresh data
     const interval = setInterval(loadUsers, 5000);
+    
+    // Listen for storage changes to update user data in real-time
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'mindcare_demo_users' || e.key === 'mindcare_registered_users' || e.key === 'mindcare_user') {
+        loadUsers();
+      }
+    };
+    
+    window.addEventListener('storage', handleStorageChange);
+    
     return () => clearInterval(interval);
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('storage', handleStorageChange);
+    };
   }, []);
 
   const loadUsers = () => {
     // Load registered users
     const registeredUsers = JSON.parse(localStorage.getItem('mindcare_registered_users') || '[]');
     
+    // Load any updated demo user data
+    const updatedDemoUsers = JSON.parse(localStorage.getItem('mindcare_demo_users') || '[]');
+    
     // Demo users
-    const demoUsers = [
+    const defaultDemoUsers = [
       {
         id: '1',
         name: 'John Doe',
@@ -90,6 +107,12 @@ function UsersPage() {
         verified: true
       }
     ];
+    
+    // Merge default demo users with any updates
+    const demoUsers = defaultDemoUsers.map(defaultUser => {
+      const updatedUser = updatedDemoUsers.find((u: any) => u.id === defaultUser.id);
+      return updatedUser ? { ...defaultUser, ...updatedUser } : defaultUser;
+    });
 
     // Combine demo users with registered users
     const allUsers = [...demoUsers];

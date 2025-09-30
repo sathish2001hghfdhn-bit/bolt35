@@ -44,12 +44,31 @@ function ProfilePage() {
       
       updateUser(updatedUserData);
       
-      // Update registered users in localStorage
+      // Update registered users in localStorage (for non-demo users)
       const registeredUsers = JSON.parse(localStorage.getItem('mindcare_registered_users') || '[]');
-      const updatedUsers = registeredUsers.map((u: any) => 
-        u.id === user?.id ? { ...u, ...updatedUserData } : u
-      );
-      localStorage.setItem('mindcare_registered_users', JSON.stringify(updatedUsers));
+      
+      // Check if this is a demo user (admin@example.com) or registered user
+      const isDemoUser = user?.email === 'admin@example.com' || user?.email === 'patient@example.com' || user?.email === 'therapist@example.com';
+      
+      if (!isDemoUser) {
+        // Update registered users for non-demo users
+        const updatedUsers = registeredUsers.map((u: any) => 
+          u.id === user?.id ? { ...u, ...updatedUserData } : u
+        );
+        localStorage.setItem('mindcare_registered_users', JSON.stringify(updatedUsers));
+      } else {
+        // For demo users, we need to handle them differently since they're not in registered_users
+        // Update demo users in a separate storage or handle in auth context
+        const demoUsers = JSON.parse(localStorage.getItem('mindcare_demo_users') || '[]');
+        const existingDemoIndex = demoUsers.findIndex((u: any) => u.id === user?.id);
+        
+        if (existingDemoIndex !== -1) {
+          demoUsers[existingDemoIndex] = { ...demoUsers[existingDemoIndex], ...updatedUserData };
+        } else {
+          demoUsers.push(updatedUserData);
+        }
+        localStorage.setItem('mindcare_demo_users', JSON.stringify(demoUsers));
+      }
       
       // If therapist, update therapist services
       if (user?.role === 'therapist') {
