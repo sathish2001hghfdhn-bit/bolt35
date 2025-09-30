@@ -1,9 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { 
-  User, Mail, Phone, Calendar, MapPin, Edit, Save, 
-  X, Camera, Shield, Award, Clock, Heart
-} from 'lucide-react';
+import { User, Mail, Phone, Calendar, MapPin, CreditCard as Edit, Save, X, Camera, Shield, Award, Clock, Heart } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import toast from 'react-hot-toast';
